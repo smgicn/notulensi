@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notulensi Digital - Enterprise Meeting Management</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- html2pdf.js for Client-side Corporate PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ====================================================================
+         TOP NAVIGATION BAR
+         ==================================================================== -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="#dashboard" class="nav-brand" id="brandLink">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-file-signature"></i>
+                </div>
+                <div class="brand-info">
+                    <div class="brand-title">NOTULENSI<span>DIGITAL</span></div>
+                    <div class="brand-subtitle">Sistem Pencatatan Rapat Perusahaan</div>
+                </div>
+            </a>
+
+            <!-- Navigation Links -->
+            <ul class="nav-menu" id="navMenu">
+                <li>
+                    <a href="#dashboard" class="nav-link active" data-view="dashboardView">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#create" class="nav-link" data-view="createView">
+                        <i class="fa-solid fa-file-circle-plus"></i>
+                        <span>Buat Notulensi</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#history" class="nav-link" data-view="historyView">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Riwayat Notulensi</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="nav-actions">
+                <!-- Real-time Firebase Connection Indicator -->
+                <div class="connection-status" id="connectionStatusBadge" title="Status Sinkronisasi Firebase Firestore">
+                    <span class="status-dot online" id="statusDot"></span>
+                    <span id="statusText">Firestore Terhubung</span>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu Navigasi">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ====================================================================
+         MAIN APP CONTENT (SPA VIEWS)
+         ==================================================================== -->
+    <main class="main-content">
+        <div class="container">
+
+            <!-- ------------------------------------------------------------
+                 VIEW 1: DASHBOARD
+                 ------------------------------------------------------------ -->
+            <section id="dashboardView" class="view-section active">
+                <div class="dashboard-header">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="fa-solid fa-gauge-high" style="color: var(--primary);"></i>
+                            Dashboard Notulensi
+                        </h1>
+                        <p class="page-subtitle" id="currentDateIndoBanner">Memuat waktu lokal Indonesia (WIB)...</p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="#create" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Buat Notulensi Baru</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- KPI Metric Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Total Notulensi</span>
+                            <span class="stat-value" id="kpiTotal">0</span>
+                            <span class="stat-desc">Semua data tersimpan</span>
+                        </div>
+                        <div class="stat-icon blue">
+                            <i class="fa-solid fa-folder-closed"></i>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Notulensi Evaluasi</span>
+                            <span class="stat-value" id="kpiEvaluasi">0</span>
+                            <span class="stat-desc">Kategori Evaluasi</span>
+                        </div>
+                        <div class="stat-icon green">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Notulensi Kalibrasi</span>
+                            <span class="stat-value" id="kpiKalibrasi">0</span>
+                            <span class="stat-desc">Kategori Kalibrasi</span>
+                        </div>
+                        <div class="stat-icon purple">
+                            <i class="fa-solid fa-sliders"></i>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <span class="stat-label">Total Partisipan</span>
+                            <span class="stat-value" id="kpiPeserta">0</span>
+                            <span class="stat-desc">Peserta rapat terdata</span>
+                        </div>
+                        <div class="stat-icon amber">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Banner -->
+                <div class="quick-action-banner">
+                    <div class="banner-content">
+                        <h2>Dokumentasi Hasil Rapat Lebih Cepat & Rapi</h2>
+                        <p>Catat hasil rapat Evaluasi & Kalibrasi internal perusahaan, bagikan action plan, dan unduh dokumen resmi dalam format PDF berstandar korporat.</p>
+                    </div>
+                    <div class="banner-actions">
+                        <a href="#create" class="btn btn-white">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Tulis Notulensi</span>
+                        </a>
+                        <a href="#history" class="btn btn-outline" style="color: white; border-color: rgba(255,255,255,0.4);">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>Buka Riwayat</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Recent Notulensi Table -->
+                <div class="content-card">
+                    <div class="card-header-bar">
+                        <div class="card-header-title">
+                            <i class="fa-solid fa-clock" style="color: var(--primary);"></i>
+                            <span>Notulensi Terbaru</span>
+                        </div>
+                        <a href="#history" class="btn btn-sm btn-outline">Lihat Semua Riwayat</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Jenis</th>
+                                    <th>Nama Notulensi</th>
+                                    <th>Pembuat</th>
+                                    <th>Peserta</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentNotulensiTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ------------------------------------------------------------
+                 VIEW 2: FORMULIR NOTULENSI (BUAT BARU)
+                 ------------------------------------------------------------ -->
+            <section id="createView" class="view-section">
+                <div class="dashboard-header">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="fa-solid fa-file-circle-plus" style="color: var(--primary);"></i>
+                            Formulir Notulensi Meeting
+                        </h1>
+                        <p class="page-subtitle">Isi data rapat secara lengkap untuk dokumentasi internal yang akurat.</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline" id="resetFormBtnTop">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Reset Formulir</span>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="notulensiForm" class="form-card" novalidate>
+                    
+                    <!-- Bagian A - C: Identitas Notulensi -->
+                    <div class="form-section-title">
+                        <span class="section-number">1</span>
+                        <span>Identitas Rapat</span>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- Jenis Notulensi -->
+                        <div class="form-group col-4">
+                            <label class="form-label" for="jenisNotulensi">
+                                Jenis Notulensi <span class="required-mark">*</span>
+                            </label>
+                            <select id="jenisNotulensi" class="form-control" required>
+                                <option value="">-- Pilih Jenis Notulensi --</option>
+                                <option value="Evaluasi">Evaluasi</option>
+                                <option value="Kalibrasi">Kalibrasi</option>
+                            </select>
+                            <span class="form-helper">Wajib dipilih sebelum disimpan</span>
+                        </div>
+
+                        <!-- Tanggal Notulensi (WIB) -->
+                        <div class="form-group col-4">
+                            <label class="form-label" for="tanggalNotulensiFormatted">
+                                Tanggal Notulensi (DD/MM/YYYY) <span class="required-mark">*</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <i class="fa-regular fa-calendar-days"></i>
+                                <input type="text" id="tanggalNotulensiFormatted" class="form-control" placeholder="DD/MM/YYYY" required>
+                                <input type="date" id="tanggalPickerHidden" style="position: absolute; right: 10px; opacity: 0; width: 30px; cursor: pointer;" title="Pilih Tanggal">
+                            </div>
+                            <span class="form-helper">Terisi otomatis sesuai waktu Indonesia (WIB)</span>
+                        </div>
+
+                        <!-- Nama Pembuat Notulensi / Notulis -->
+                        <div class="form-group col-4">
+                            <label class="form-label" for="pembuatNotulensi">
+                                Nama Pembuat / Notulis <span class="required-mark">*</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-user-pen"></i>
+                                <input type="text" id="pembuatNotulensi" class="form-control" placeholder="Contoh: Jamali (Team Leader)" required>
+                            </div>
+                            <span class="form-helper">Nama lengkap notulis atau pimpinan rapat</span>
+                        </div>
+
+                        <!-- Nama Notulensi -->
+                        <div class="form-group col-12">
+                            <label class="form-label" for="namaNotulensi">
+                                Nama / Judul Notulensi <span class="required-mark">*</span>
+                            </label>
+                            <input type="text" id="namaNotulensi" class="form-control" placeholder="Contoh: Evaluasi Performance Agent November 2026" required>
+                            <span class="form-helper">Berikan judul yang jelas dan spesifik</span>
+                        </div>
+                    </div>
+
+                    <!-- Bagian E: Peserta Meeting -->
+                    <div class="form-section-title">
+                        <span class="section-number">2</span>
+                        <span>Peserta Meeting <span class="required-mark">*</span></span>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group col-12">
+                            <div class="participants-box">
+                                <div class="participant-input-row">
+                                    <div class="input-with-icon" style="flex: 1;">
+                                        <i class="fa-solid fa-user-plus"></i>
+                                        <input type="text" id="participantInput" class="form-control" placeholder="Ketik nama peserta dan tekan Tambah atau tombol Enter...">
+                                    </div>
+                                    <button type="button" class="btn btn-primary" id="addParticipantBtn">
+                                        <i class="fa-solid fa-plus"></i>
+                                        <span>Tambah</span>
+                                    </button>
+                                </div>
+
+                                <div class="chips-container" id="participantsChipsContainer">
+                                    <span class="chip-empty-placeholder">Belum ada peserta yang dimasukkan.</span>
+                                </div>
+                            </div>
+                            <span class="form-helper">Minimal 1 peserta rapat wajib ditambahkan.</span>
+                        </div>
+                    </div>
+
+                    <!-- Bagian D: Detail Notulensi -->
+                    <div class="form-section-title">
+                        <span class="section-number">3</span>
+                        <span>Detail Pembahasan Meeting <span class="required-mark">*</span></span>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group col-12">
+                            <label class="form-label" for="detailNotulensi">
+                                Catatan Pembahasan Lengkap
+                            </label>
+                            
+                            <!-- Formatting toolbar for bullets, bold, numbers -->
+                            <div class="textarea-toolbar">
+                                <button type="button" class="tool-btn" data-action="bold" title="Tebal (Bold)">
+                                    <i class="fa-solid fa-bold"></i>
+                                </button>
+                                <button type="button" class="tool-btn" data-action="italic" title="Miring (Italic)">
+                                    <i class="fa-solid fa-italic"></i>
+                                </button>
+                                <span style="color: var(--border-color); margin: 0 4px;">|</span>
+                                <button type="button" class="tool-btn" data-action="bullet" title="Poin Bullet (•)">
+                                    <i class="fa-solid fa-list-ul"></i>
+                                </button>
+                                <button type="button" class="tool-btn" data-action="number" title="Poin Angka (1.)">
+                                    <i class="fa-solid fa-list-ol"></i>
+                                </button>
+                                <button type="button" class="tool-btn" data-action="heading" title="Subjudul (H3)">
+                                    <i class="fa-solid fa-heading"></i>
+                                </button>
+                                <button type="button" class="tool-btn" data-action="clear" title="Bersihkan Teks">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                            
+                            <textarea id="detailNotulensi" class="form-control textarea-tooltipped" rows="8" placeholder="Tuliskan jalannya rapat secara terstruktur. Mendukung penulisan paragraf, poin-poin penting, bullet, numbering, dan copy-paste teks..." required></textarea>
+                            <span class="form-helper">Area luas yang nyaman untuk notulensi panjang.</span>
+                        </div>
+                    </div>
+
+                    <!-- Bagian F: Hasil Evaluasi / Kalibrasi & Action Plan -->
+                    <div class="form-section-title">
+                        <span class="section-number">4</span>
+                        <span>Hasil & Tindak Lanjut Meeting</span>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- Poin Pembahasan -->
+                        <div class="form-group col-6">
+                            <label class="form-label" for="poinPembahasan">
+                                Poin Pembahasan Utama <span class="required-mark">*</span>
+                            </label>
+                            <textarea id="poinPembahasan" class="form-control" rows="3" placeholder="Rangkuman poin inti yang diangkat dalam evaluasi/kalibrasi..." required></textarea>
+                        </div>
+
+                        <!-- Hasil Diskusi -->
+                        <div class="form-group col-6">
+                            <label class="form-label" for="hasilDiskusi">
+                                Hasil Diskusi <span class="required-mark">*</span>
+                            </label>
+                            <textarea id="hasilDiskusi" class="form-control" rows="3" placeholder="Hasil telaah, tanggapan peserta, dan kesimpulan diskusi..." required></textarea>
+                        </div>
+
+                        <!-- Keputusan Meeting -->
+                        <div class="form-group col-6">
+                            <label class="form-label" for="keputusanMeeting">
+                                Keputusan Meeting <span class="required-mark">*</span>
+                            </label>
+                            <textarea id="keputusanMeeting" class="form-control" rows="3" placeholder="Keputusan final yang disepakati bersama dalam forum..." required></textarea>
+                        </div>
+
+                        <!-- Action Plan / Tindak Lanjut -->
+                        <div class="form-group col-6">
+                            <label class="form-label" for="actionPlan">
+                                Action Plan / Tindak Lanjut <span class="required-mark">*</span>
+                            </label>
+                            <textarea id="actionPlan" class="form-control" rows="3" placeholder="Langkah konkrit yang harus dilaksanakan setelah rapat..." required></textarea>
+                        </div>
+
+                        <!-- PIC (Person in Charge) -->
+                        <div class="form-group col-6">
+                            <label class="form-label" for="picTindakLanjut">
+                                PIC (Person in Charge) <span class="required-mark">*</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-user-shield"></i>
+                                <input type="text" id="picTindakLanjut" class="form-control" placeholder="Nama penanggung jawab tindak lanjut (Contoh: Ahmad, Budi)" required>
+                            </div>
+                        </div>
+
+                        <!-- Deadline Tindak Lanjut -->
+                        <div class="form-group col-6">
+                            <label class="form-label" for="deadlineTindakLanjut">
+                                Deadline Tindak Lanjut <span class="required-mark">*</span>
+                            </label>
+                            <div class="input-with-icon">
+                                <i class="fa-regular fa-clock"></i>
+                                <input type="date" id="deadlineTindakLanjut" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi Formulir -->
+                    <div class="form-actions-bar">
+                        <button type="button" class="btn btn-outline" id="resetFormBtn">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Reset Formulir</span>
+                        </button>
+                        
+                        <div class="actions-right">
+                            <button type="button" class="btn btn-secondary" id="previewBtn">
+                                <i class="fa-solid fa-eye"></i>
+                                <span>Preview Notulensi</span>
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="saveNotulensiBtn">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Simpan Notulensi</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+
+            <!-- ------------------------------------------------------------
+                 VIEW 3: RIWAYAT NOTULENSI
+                 ------------------------------------------------------------ -->
+            <section id="historyView" class="view-section">
+                
+                <!-- Section 10: Interactive Search Bar -->
+                <div class="search-filter-card">
+                    <div class="search-bar-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon-left"></i>
+                        <input type="text" id="mainSearchInput" class="main-search-input" placeholder="Cari nama notulensi, jenis, tanggal, atau kata kunci..." autocomplete="off">
+                        <button type="button" id="clearSearchBtn" class="search-clear-btn" title="Hapus Pencarian">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Section 11: Filter dan Kategorisasi -->
+                    <div class="filter-controls-row">
+                        <div class="filter-left-group">
+                            <!-- Kategori Pills -->
+                            <div class="category-pills" id="categoryFilterPills">
+                                <button type="button" class="pill-btn active" data-category="ALL">Semua Notulensi</button>
+                                <button type="button" class="pill-btn" data-category="Evaluasi">Evaluasi</button>
+                                <button type="button" class="pill-btn" data-category="Kalibrasi">Kalibrasi</button>
+                            </div>
+
+                            <!-- Periode Filter Dropdown -->
+                            <div class="period-select-wrap">
+                                <select id="periodFilterSelect" class="period-select">
+                                    <option value="ALL">Semua Waktu</option>
+                                    <option value="TODAY">Hari ini</option>
+                                    <option value="THIS_WEEK">Minggu ini</option>
+                                    <option value="THIS_MONTH">Bulan ini</option>
+                                    <option value="CUSTOM">Pilih Rentang Tanggal...</option>
+                                </select>
+                            </div>
+
+                            <!-- Custom Date Range Inputs (Shown when CUSTOM is selected) -->
+                            <div class="custom-range-inputs" id="customDateRangeBox">
+                                <input type="date" id="customStartDate" class="custom-date-field" title="Tanggal Mulai">
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">-</span>
+                                <input type="date" id="customEndDate" class="custom-date-field" title="Tanggal Selesai">
+                            </div>
+                        </div>
+
+                        <!-- Urutan Sorting -->
+                        <div class="sort-selector-wrap">
+                            <select id="sortOrderSelect" class="period-select">
+                                <option value="NEWEST">Tanggal Terbaru (Default)</option>
+                                <option value="OLDEST">Tanggal Terlama</option>
+                                <option value="TITLE_AZ">Nama (A - Z)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Summary Counter -->
+                <div class="results-summary-bar">
+                    <div>
+                        <span id="resultsCountText">Menampilkan <strong id="visibleCount">0</strong> dari <strong id="totalCount">0</strong> notulensi</span>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline" id="refreshDataBtn" title="Sinkronkan Ulang dari Firestore">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Sinkronkan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Card Container -->
+                <div class="content-card">
+                    <div class="table-responsive">
+                        <table class="custom-table" id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">No.</th>
+                                    <th>Tanggal</th>
+                                    <th>Jenis</th>
+                                    <th>Nama Notulensi</th>
+                                    <th>Pembuat</th>
+                                    <th>Waktu Simpan</th>
+                                    <th>Peserta</th>
+                                    <th style="text-align: center;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State (Shown when search/filter yields zero results) -->
+                    <div class="empty-state" id="historyEmptyState" style="display: none;">
+                        <div class="empty-icon">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <h3 class="empty-title">Notulensi tidak ditemukan</h3>
+                        <p class="empty-desc">Tidak ada hasil yang cocok dengan kata kunci atau filter pencarian Anda. Silakan coba kata kunci lain atau bersihkan filter.</p>
+                        <button type="button" class="btn btn-primary" id="resetSearchAndFilterBtn">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Reset Pencarian & Filter</span>
+                        </button>
+                    </div>
+
+                    <!-- Pagination Bar -->
+                    <div class="pagination-wrapper" id="paginationWrapper">
+                        <div class="pagination-info" id="paginationInfo">
+                            Halaman 1 dari 1
+                        </div>
+                        <div class="pagination-controls" id="paginationControls">
+                            <!-- Page buttons populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+
+    <!-- ====================================================================
+         MODALS
+         ==================================================================== -->
+
+    <!-- 1. DETAIL NOTULENSI MODAL -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-container modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-file-lines" style="color: var(--primary);"></i>
+                    <span>Detail Notulensi Rapat</span>
+                </div>
+                <button type="button" class="modal-close-btn" data-close-modal="detailModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                <!-- Rendered dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-close-modal="detailModal">Tutup</button>
+                <button type="button" class="btn btn-secondary" id="modalEditBtn">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Edit</span>
+                </button>
+                <button type="button" class="btn btn-primary" id="modalDownloadPdfBtn">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Download PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. PREVIEW NOTULENSI MODAL (SEBELUM SIMPAN) -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-container modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-eye" style="color: var(--primary);"></i>
+                    <span>Preview Notulensi Rapat</span>
+                </div>
+                <button type="button" class="modal-close-btn" data-close-modal="previewModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="previewModalBody">
+                <!-- Rendered dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-close-modal="previewModal">Kembali ke Formulir</button>
+                <button type="button" class="btn btn-primary" id="previewConfirmSaveBtn">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Simpan Notulensi Sekarang</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. EDIT NOTULENSI MODAL -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-container modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i>
+                    <span>Edit Notulensi Rapat</span>
+                </div>
+                <button type="button" class="modal-close-btn" data-close-modal="editModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editNotulensiForm" novalidate>
+                    <input type="hidden" id="editNotulensiId">
+                    
+                    <div class="form-grid">
+                        <div class="form-group col-4">
+                            <label class="form-label">Jenis Notulensi <span class="required-mark">*</span></label>
+                            <select id="editJenisNotulensi" class="form-control" required>
+                                <option value="Evaluasi">Evaluasi</option>
+                                <option value="Kalibrasi">Kalibrasi</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-4">
+                            <label class="form-label">Tanggal Notulensi <span class="required-mark">*</span></label>
+                            <input type="text" id="editTanggalFormatted" class="form-control" required>
+                        </div>
+                        <div class="form-group col-4">
+                            <label class="form-label">Pembuat / Notulis <span class="required-mark">*</span></label>
+                            <input type="text" id="editPembuatNotulensi" class="form-control" required>
+                        </div>
+                        <div class="form-group col-12">
+                            <label class="form-label">Nama Notulensi <span class="required-mark">*</span></label>
+                            <input type="text" id="editNamaNotulensi" class="form-control" required>
+                        </div>
+                        
+                        <!-- Edit Peserta -->
+                        <div class="form-group col-12">
+                            <label class="form-label">Peserta Meeting <span class="required-mark">*</span></label>
+                            <div class="participants-box">
+                                <div class="participant-input-row">
+                                    <input type="text" id="editParticipantInput" class="form-control" placeholder="Tambah nama peserta...">
+                                    <button type="button" class="btn btn-primary" id="editAddParticipantBtn">Tambah</button>
+                                </div>
+                                <div class="chips-container" id="editParticipantsChipsContainer"></div>
+                            </div>
+                        </div>
+
+                        <!-- Edit Detail -->
+                        <div class="form-group col-12">
+                            <label class="form-label">Detail Pembahasan Meeting <span class="required-mark">*</span></label>
+                            <textarea id="editDetailNotulensi" class="form-control" rows="6" required></textarea>
+                        </div>
+
+                        <!-- Edit Hasil -->
+                        <div class="form-group col-6">
+                            <label class="form-label">Poin Pembahasan <span class="required-mark">*</span></label>
+                            <textarea id="editPoinPembahasan" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="form-label">Hasil Diskusi <span class="required-mark">*</span></label>
+                            <textarea id="editHasilDiskusi" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="form-label">Keputusan Meeting <span class="required-mark">*</span></label>
+                            <textarea id="editKeputusanMeeting" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="form-label">Action Plan / Tindak Lanjut <span class="required-mark">*</span></label>
+                            <textarea id="editActionPlan" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="form-label">PIC (Person in Charge) <span class="required-mark">*</span></label>
+                            <input type="text" id="editPicTindakLanjut" class="form-control" required>
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="form-label">Deadline Tindak Lanjut <span class="required-mark">*</span></label>
+                            <input type="date" id="editDeadlineTindakLanjut" class="form-control" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-close-modal="editModal">Batal</button>
+                <button type="button" class="btn btn-primary" id="saveEditBtn">
+                    <i class="fa-solid fa-check"></i>
+                    <span>Simpan Perubahan</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. DELETE CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-container modal-sm">
+            <div class="modal-header">
+                <div class="modal-title" style="color: var(--danger);">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Konfirmasi Hapus</span>
+                </div>
+                <button type="button" class="modal-close-btn" data-close-modal="deleteModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 24px 20px;">
+                <p style="font-size: 1rem; color: var(--text-primary); margin-bottom: 8px;">Apakah Anda yakin ingin menghapus notulensi ini?</p>
+                <p style="font-weight: 700; color: var(--danger); font-size: 1.05rem;" id="deleteItemTitle">-</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 12px;">Tindakan ini permanen dan akan disinkronkan ke seluruh sistem Firestore.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button type="button" class="btn btn-outline" data-close-modal="deleteModal">Batal</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Ya, Hapus Notulensi</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         TOAST CONTAINER
+         ==================================================================== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ====================================================================
+         HIDDEN PDF TEMPLATE (FOR HTML2PDF)
+         ==================================================================== -->
+    <div id="pdfTemplateWrapper">
+        <div id="pdfRenderArea"></div>
+    </div>
+
+    <!-- Main Application Script (ES6 Module) -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
